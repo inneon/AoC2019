@@ -1,0 +1,19 @@
+{
+  "name": "aoc2019",
+  "version": "1.0.0",
+  "description": "Advent of Code 2019",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "tsc && node dist/index.js"
+  },
+  "author": "Jonny",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.2",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.3"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
