@@ -9,7 +9,6 @@ describe('password guesser', () => {
   it('gets the right number for a 3 digit code', () => {
     const actual = enumerate(3, 111, 222)
     expect(actual).toEqual([
-      111,
       112,
       113,
       114,
@@ -25,8 +24,7 @@ describe('password guesser', () => {
       166,
       177,
       188,
-      199,
-      222
+      199
     ])
   })
 })

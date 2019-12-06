@@ -1,6 +1,11 @@
-const hasDouble = (candidate: number) => {
-  const regex = /(\d)\1/
-  return regex.test(candidate.toString())
+export const validPass = (candidate: number) => {
+  return [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    .map(
+      num =>
+        new RegExp(`${num}${num}`).exec(candidate.toString()) &&
+        !new RegExp(`${num}${num}${num}`).exec(candidate.toString())
+    )
+    .reduce((prev, curr) => prev || curr, false)
 }
 
 function* generate(
@@ -13,7 +18,7 @@ function* generate(
       yield* generate(digits - 1, i, i + accumulator * 10)
     } else {
       const result = i + accumulator * 10
-      if (hasDouble(result)) yield result
+      if (validPass(result)) yield result
     }
   }
 }
