@@ -12,48 +12,190 @@ const getParameters = (parameterBlock: number) => {
   return stringRep.toString().split('')
 }
 
+interface InterpreterResult {
+  newProgramCounter: number
+  halt: boolean
+}
+5
+type InstructionInterpreter = (
+  code: number[],
+  programCounter: number,
+  parameters: string
+) => InterpreterResult
+
+const addInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op3 = code[programCounter + 3]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+
+  log(
+    `add ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3} - ${parameters}`
+  )
+  code[op3] = op1Value + op2Value
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 4
+  }
+}
+
+const multInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op3 = code[programCounter + 3]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+  log(`mult ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3}`)
+  code[op3] = op1Value * op2Value
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 4
+  }
+}
+
+const inputInterpreter = (input: number): InstructionInterpreter => (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  code[op1] = input
+  log(`read input ${input} into ${op1}`)
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 2
+  }
+}
+const outputInterpreter = (
+  output: (val: number) => void
+): InstructionInterpreter => (code, programCounter, parameters) => {
+  const op1 = code[programCounter + 1]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+
+  log(`Output ${op1Value} (${op1})`)
+  output(op1Value)
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 2
+  }
+}
+
+const haltInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  log(`halt`)
+  return {
+    halt: true,
+    newProgramCounter: programCounter
+  }
+}
+
+const jtInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+  log(`jump if ${op1Value} (${op1}) to ${op2Value} (${op2})`)
+  return {
+    halt: false,
+    newProgramCounter: op1Value === 0 ? programCounter + 3 : op2Value
+  }
+}
+
+const jfInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+  log(`jump if not ${op1Value} (${op1}) to ${op2Value} (${op2})`)
+  return {
+    halt: false,
+    newProgramCounter: op1Value !== 0 ? programCounter + 3 : op2Value
+  }
+}
+
+const ltInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op3 = code[programCounter + 3]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+  log(`check ${op1Value} (${op1}) < ${op2Value} (${op2}), store in ${op3}`)
+  code[op3] = op1Value < op2Value ? 1 : 0
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 4
+  }
+}
+
+const eqInterpreter: InstructionInterpreter = (
+  code,
+  programCounter,
+  parameters
+) => {
+  const op1 = code[programCounter + 1]
+  const op2 = code[programCounter + 2]
+  const op3 = code[programCounter + 3]
+  const op1Value = /1$/.exec(parameters) ? op1 : code[op1]
+  const op2Value = /1.$/.exec(parameters) ? op2 : code[op2]
+  log(`check ${op1Value} (${op1}) == ${op2Value} (${op2}), store in ${op3}`)
+  code[op3] = op1Value === op2Value ? 1 : 0
+  return {
+    halt: false,
+    newProgramCounter: programCounter + 4
+  }
+}
+
+const interpreters = (input: number, output: (val: number) => void) => ({
+  '1': addInterpreter,
+  '2': multInterpreter,
+  '3': inputInterpreter(input),
+  '4': outputInterpreter(output),
+  '5': jtInterpreter,
+  '6': jfInterpreter,
+  '7': ltInterpreter,
+  '8': eqInterpreter,
+  '99': haltInterpreter
+})
+
 const doInstruction = (
   code: number[],
   programCounter: number,
   input: number,
   output: (val: number) => void
 ) => {
-  let [instruction, op1, op2, op3] = code.slice(
-    programCounter,
-    programCounter + 4
-  )
+  let instruction = code[programCounter]
   const parametersBlock = Math.floor(instruction / 100)
   instruction -= 100 * parametersBlock
-  const parameters = getParameters(parametersBlock)
-  const operand1 = parameters[2] === '1' ? op1 : code[op1]
-  const operand2 = parameters[1] === '1' ? op2 : code[op2]
-  switch (instruction) {
-    case 1:
-      log(`add ${operand1} ${op1} to ${operand2} ${op2}, store in ${op3}`)
-      code[op3] = operand1 + operand2
-      return { halt: false, inc: 4 }
-    case 2:
-      log(`mult ${operand1} ${op1} to ${operand2} ${op2}, store in ${op3}`)
-      code[op3] = operand1 * operand2
-      return { halt: false, inc: 4 }
-    case 3:
-      log(`read input into ${op1}`)
-      code[op1] = input
-      return { halt: false, inc: 2 }
-    case 4:
-      if (parametersBlock === 1) {
-        log(`output ${op1}`)
-        output(op1)
-      } else {
-        log(`output from ${op1}`)
-        output(code[op1])
-      }
-      return { halt: false, inc: 2 }
-    case 99:
-      return { halt: true, inc: 1 }
-    default:
-      throw new Error(`Unrecognised instruction ${instruction}`)
-  }
+  const interpreter: InstructionInterpreter | undefined = interpreters(
+    input,
+    output
+  )[instruction.toString()]
+  if (!interpreter) throw new Error(`Unrecognised instruction ${instruction}`)
+  return interpreter(code, programCounter, parametersBlock.toString())
 }
 
 export const interpretCode = (
@@ -72,8 +214,9 @@ export const interpretCode = (
 
   while (!halt) {
     const instrResult = doInstruction(code, programCounter, input, output)
+    // log(`${code}`)
     halt = instrResult.halt
-    programCounter += instrResult.inc
+    programCounter = instrResult.newProgramCounter
   }
 
   return code.map(num => `${num}`).join(',')
