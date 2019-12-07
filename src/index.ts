@@ -1,7 +1,7 @@
-import { count } from './day6/orbitMapper'
+import { transfers } from './day6/orbitMapper'
 
 console.log(
-  count([
+  transfers([
     '97W)B43',
     'R63)RTM',
     '19C)SHD',

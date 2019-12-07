@@ -1,4 +1,4 @@
-import { count } from './orbitMapper'
+import { count, transfers } from './orbitMapper'
 
 describe('orbit mapper', () => {
   it('can count a simple system', () => {
@@ -24,5 +24,24 @@ describe('orbit mapper', () => {
       'K)L'
     ]
     expect(count(orbits)).toBe(42)
+  })
+
+  it('matches example 2', () => {
+    const orbits = [
+      'COM)B',
+      'B)C',
+      'C)D',
+      'D)E',
+      'E)F',
+      'B)G',
+      'G)H',
+      'D)I',
+      'E)J',
+      'J)K',
+      'K)L',
+      'K)YOU',
+      'I)SAN'
+    ]
+    expect(transfers(orbits)).toBe(4)
   })
 })
