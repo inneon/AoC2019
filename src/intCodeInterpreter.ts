@@ -4,14 +4,6 @@ const log = (message: string) => {
     console.log(message)
   }
 }
-
-const getParameters = (parameterBlock: number) => {
-  let stringRep = parameterBlock.toString()
-  if (parameterBlock < 100) stringRep = '0' + stringRep
-  if (parameterBlock < 10) stringRep = '0' + stringRep
-  return stringRep.toString().split('')
-}
-
 interface InterpreterResult {
   newProgramCounter: number
   halt: boolean
@@ -68,8 +60,9 @@ const inputInterpreter = (input: () => number): InstructionInterpreter => (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
-  code[op1] = input()
-  log(`read input ${input} into ${op1}`)
+  const inputVal = input()
+  code[op1] = inputVal
+  log(`read input ${inputVal} into ${op1}`)
   return {
     halt: false,
     newProgramCounter: programCounter + 2
@@ -214,7 +207,6 @@ export const interpretCode = (
 
   while (!halt) {
     const instrResult = doInstruction(code, programCounter, input, output)
-    // log(`${code}`)
     halt = instrResult.halt
     programCounter = instrResult.newProgramCounter
   }
@@ -223,10 +215,35 @@ export const interpretCode = (
 }
 
 export const chainInterpreter = (raw: string | number[], phases: number[]) => {
-  let input = 0
-  const output = (val: number) => (input = val)
+  let intermediates
 
-  interpretCode(raw, () => phases[0], output)
+  return phases.reduce((input, phase) => {
+    const output = (val: number) => (intermediates = val)
+    const phaseInputs = [phase, input]
+    const getInput = () => {
+      return phaseInputs.shift()
+    }
+    interpretCode(raw, getInput, output)
+    return intermediates
+  }, 0)
+}
 
-  return input
+export function* generateChains(phases: number): Generator<number[]> {
+  if (phases === 0) {
+    return yield []
+  }
+  const subChains = generateChains(phases - 1)
+  for (const chain of subChains) {
+    for (let i = 0; i < phases; i++) {
+      yield [...chain.slice(0, i), phases - 1, ...chain.slice(i)]
+    }
+  }
+}
+
+export const maximiseChain = (raw: string | number[], phases: number) => {
+  return Array.from(generateChains(phases)).reduce((max, phases) => {
+    const curr = chainInterpreter(raw, phases)
+    if (curr > max) return curr
+    return max
+  }, 0)
 }
