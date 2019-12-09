@@ -62,13 +62,13 @@ const multInterpreter: InstructionInterpreter = (
   }
 }
 
-const inputInterpreter = (input: number): InstructionInterpreter => (
+const inputInterpreter = (input: () => number): InstructionInterpreter => (
   code,
   programCounter,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
-  code[op1] = input
+  code[op1] = input()
   log(`read input ${input} into ${op1}`)
   return {
     halt: false,
@@ -169,7 +169,7 @@ const eqInterpreter: InstructionInterpreter = (
   }
 }
 
-const interpreters = (input: number, output: (val: number) => void) => ({
+const interpreters = (input: () => number, output: (val: number) => void) => ({
   '1': addInterpreter,
   '2': multInterpreter,
   '3': inputInterpreter(input),
@@ -184,7 +184,7 @@ const interpreters = (input: number, output: (val: number) => void) => ({
 const doInstruction = (
   code: number[],
   programCounter: number,
-  input: number,
+  input: () => number,
   output: (val: number) => void
 ) => {
   let instruction = code[programCounter]
@@ -200,7 +200,7 @@ const doInstruction = (
 
 export const interpretCode = (
   raw: string | number[],
-  input: number = 0,
+  input: () => number = () => 0,
   output: (val: number) => void = () => {}
 ) => {
   let code: number[]
@@ -220,4 +220,13 @@ export const interpretCode = (
   }
 
   return code.map(num => `${num}`).join(',')
+}
+
+export const chainInterpreter = (raw: string | number[], phases: number[]) => {
+  let input = 0
+  const output = (val: number) => (input = val)
+
+  interpretCode(raw, () => phases[0], output)
+
+  return input
 }
