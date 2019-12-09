@@ -200,8 +200,8 @@ const doInstruction = (
 
 export const interpretCode = (
   raw: string | number[],
-  input: number,
-  output: (val: number) => void
+  input: number = 0,
+  output: (val: number) => void = () => {}
 ) => {
   let code: number[]
   if (typeof raw === 'string') {

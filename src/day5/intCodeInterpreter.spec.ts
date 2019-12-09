@@ -1,4 +1,4 @@
-import { interpretCode } from './intCodeInterpreter'
+import { interpretCode } from '../intCodeInterpreter'
 
 const defaultOutput = () => {}
 
