@@ -1,4 +1,4 @@
-import { maximiseChain } from './intCodeInterpreter'
+import { maximiseChain } from './intCodeInterpreter/chainer'
 
 console.log(
   maximiseChain(

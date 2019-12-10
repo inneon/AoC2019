@@ -2,7 +2,7 @@ import {
   chainInterpreter,
   generateChains,
   maximiseChain
-} from '../intCodeInterpreter'
+} from '../intCodeInterpreter/chainer'
 
 describe('chaining interpreters', () => {
   it('can output its phase', () => {

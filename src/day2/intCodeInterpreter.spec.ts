@@ -1,4 +1,4 @@
-import { interpretCode } from '../intCodeInterpreter'
+import { interpretCode } from '../intCodeInterpreter/intCodeInterpreter'
 
 describe('int code interpreter', () => {
   it('should halt on 99', () => {
