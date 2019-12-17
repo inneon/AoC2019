@@ -28,12 +28,18 @@ const addInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
+  const [op1Value, op2Value, op3Value] = decodeParameter(
+    parameters,
+    [op1, op2, op3],
+    ['read', 'read', 'write'],
+    code,
+    basePointer
+  )
 
   log(
-    `add ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3} - ${parameters}`
+    `add ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3Value} (${op3})`
   )
-  code[op3] = op1Value + op2Value
+  code[op3Value] = op1Value + op2Value
   return {
     halt: false,
     basePointer,
@@ -50,9 +56,17 @@ const multInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
-  log(`mult ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3}`)
-  code[op3] = op1Value * op2Value
+  const [op1Value, op2Value, op3Value] = decodeParameter(
+    parameters,
+    [op1, op2, op3],
+    ['read', 'read', 'write'],
+    code,
+    basePointer
+  )
+  log(
+    `mult ${op1Value} (${op1}) to ${op2Value} (${op2}), store in ${op3Value} (${op3})`
+  )
+  code[op3Value] = op1Value * op2Value
   return {
     halt: false,
     basePointer,
@@ -67,9 +81,16 @@ const inputInterpreter = (input: () => number): InstructionInterpreter => (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
+  const [op1Value] = decodeParameter(
+    parameters,
+    [op1],
+    ['write'],
+    code,
+    basePointer
+  )
   const inputVal = input()
-  code[op1] = inputVal
-  log(`read input ${inputVal} into ${op1}`)
+  code[op1Value] = inputVal
+  log(`read input ${inputVal} into ${op1Value} (${op1})`)
   return {
     halt: false,
     basePointer,
@@ -85,7 +106,13 @@ const outputInterpreter = (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
-  const [op1Value] = decodeParameter(parameters, [op1], code, 0)
+  const [op1Value] = decodeParameter(
+    parameters,
+    [op1],
+    ['read'],
+    code,
+    basePointer
+  )
 
   log(`Output ${op1Value} (${op1})`)
   output(op1Value)
@@ -118,7 +145,13 @@ const jtInterpreter: InstructionInterpreter = (
 ) => {
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
+  const [op1Value, op2Value] = decodeParameter(
+    parameters,
+    [op1, op2],
+    ['read', 'read'],
+    code,
+    basePointer
+  )
   log(`jump if ${op1Value} (${op1}) to ${op2Value} (${op2})`)
   return {
     halt: false,
@@ -135,7 +168,13 @@ const jfInterpreter: InstructionInterpreter = (
 ) => {
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
+  const [op1Value, op2Value] = decodeParameter(
+    parameters,
+    [op1, op2],
+    ['read', 'read'],
+    code,
+    basePointer
+  )
   log(`jump if not ${op1Value} (${op1}) to ${op2Value} (${op2})`)
   return {
     halt: false,
@@ -153,9 +192,17 @@ const ltInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
-  log(`check ${op1Value} (${op1}) < ${op2Value} (${op2}), store in ${op3}`)
-  code[op3] = op1Value < op2Value ? 1 : 0
+  const [op1Value, op2Value, op3Value] = decodeParameter(
+    parameters,
+    [op1, op2, op3],
+    ['read', 'read', 'write'],
+    code,
+    basePointer
+  )
+  log(
+    `check ${op1Value} (${op1}) < ${op2Value} (${op2}), store in ${op3Value} (${op3})}`
+  )
+  code[op3Value] = op1Value < op2Value ? 1 : 0
   return {
     halt: false,
     basePointer,
@@ -172,9 +219,15 @@ const eqInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
-  const [op1Value, op2Value] = decodeParameter(parameters, [op1, op2], code, 0)
+  const [op1Value, op2Value, op3Value] = decodeParameter(
+    parameters,
+    [op1, op2, op3],
+    ['read', 'read', 'write'],
+    code,
+    basePointer
+  )
   log(`check ${op1Value} (${op1}) == ${op2Value} (${op2}), store in ${op3}`)
-  code[op3] = op1Value === op2Value ? 1 : 0
+  code[op3Value] = op1Value === op2Value ? 1 : 0
   return {
     halt: false,
     basePointer,
@@ -188,7 +241,16 @@ const basePointerInterpreter: InstructionInterpreter = (
   basePointer,
   parameters
 ) => {
-  log(`change the base pointer`)
+  const op1 = code[programCounter + 1]
+  const [op1Value] = decodeParameter(
+    parameters,
+    [op1],
+    ['read'],
+    code,
+    basePointer
+  )
+  basePointer += op1Value
+  log(`change the base pointer by ${op1Value} (${op1}) to ${basePointer}`)
   return {
     halt: false,
     basePointer,

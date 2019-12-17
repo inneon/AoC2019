@@ -1,6 +1,9 @@
+type ParameterMode = 'read' | 'write'
+
 export const decodeParameter = (
   modes: string,
   operands: number[],
+  type: ParameterMode[],
   program: number[],
   basePointer: number
 ) => {
@@ -15,10 +18,15 @@ export const decodeParameter = (
     const op = operands[i]
     if (modeCodes[i] === 0) {
       // address
-      result.push(program[op])
+      result.push(type[i] === 'read' ? program[op] : op)
     } else if (modeCodes[i] === 1) {
       // immeadiate
       result.push(op)
+    } else if (modeCodes[i] === 2) {
+      // relative
+      result.push(
+        type[i] === 'read' ? program[op + basePointer] : op + basePointer
+      )
     }
   }
   return result
