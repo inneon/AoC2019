@@ -8,18 +8,21 @@ const log = (message: string) => {
 }
 interface InterpreterResult {
   newProgramCounter: number
+  basePointer: number
   halt: boolean
 }
 
 type InstructionInterpreter = (
   code: number[],
   programCounter: number,
+  basePointer: number,
   parameters: string
 ) => InterpreterResult
 
 const addInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -33,6 +36,7 @@ const addInterpreter: InstructionInterpreter = (
   code[op3] = op1Value + op2Value
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 4
   }
 }
@@ -40,6 +44,7 @@ const addInterpreter: InstructionInterpreter = (
 const multInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -50,6 +55,7 @@ const multInterpreter: InstructionInterpreter = (
   code[op3] = op1Value * op2Value
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 4
   }
 }
@@ -57,6 +63,7 @@ const multInterpreter: InstructionInterpreter = (
 const inputInterpreter = (input: () => number): InstructionInterpreter => (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -65,12 +72,18 @@ const inputInterpreter = (input: () => number): InstructionInterpreter => (
   log(`read input ${inputVal} into ${op1}`)
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 2
   }
 }
 const outputInterpreter = (
   output: (val: number) => void
-): InstructionInterpreter => (code, programCounter, parameters) => {
+): InstructionInterpreter => (
+  code,
+  programCounter,
+  basePointer,
+  parameters
+) => {
   const op1 = code[programCounter + 1]
   const [op1Value] = decodeParameter(parameters, [op1], code, 0)
 
@@ -78,6 +91,7 @@ const outputInterpreter = (
   output(op1Value)
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 2
   }
 }
@@ -85,11 +99,13 @@ const outputInterpreter = (
 const haltInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   log(`halt`)
   return {
     halt: true,
+    basePointer,
     newProgramCounter: programCounter
   }
 }
@@ -97,6 +113,7 @@ const haltInterpreter: InstructionInterpreter = (
 const jtInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -105,6 +122,7 @@ const jtInterpreter: InstructionInterpreter = (
   log(`jump if ${op1Value} (${op1}) to ${op2Value} (${op2})`)
   return {
     halt: false,
+    basePointer,
     newProgramCounter: op1Value === 0 ? programCounter + 3 : op2Value
   }
 }
@@ -112,6 +130,7 @@ const jtInterpreter: InstructionInterpreter = (
 const jfInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -120,6 +139,7 @@ const jfInterpreter: InstructionInterpreter = (
   log(`jump if not ${op1Value} (${op1}) to ${op2Value} (${op2})`)
   return {
     halt: false,
+    basePointer,
     newProgramCounter: op1Value !== 0 ? programCounter + 3 : op2Value
   }
 }
@@ -127,6 +147,7 @@ const jfInterpreter: InstructionInterpreter = (
 const ltInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -137,6 +158,7 @@ const ltInterpreter: InstructionInterpreter = (
   code[op3] = op1Value < op2Value ? 1 : 0
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 4
   }
 }
@@ -144,6 +166,7 @@ const ltInterpreter: InstructionInterpreter = (
 const eqInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   const op1 = code[programCounter + 1]
@@ -154,6 +177,7 @@ const eqInterpreter: InstructionInterpreter = (
   code[op3] = op1Value === op2Value ? 1 : 0
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 4
   }
 }
@@ -161,11 +185,13 @@ const eqInterpreter: InstructionInterpreter = (
 const basePointerInterpreter: InstructionInterpreter = (
   code,
   programCounter,
+  basePointer,
   parameters
 ) => {
   log(`change the base pointer`)
   return {
     halt: false,
+    basePointer,
     newProgramCounter: programCounter + 2
   }
 }
@@ -186,6 +212,7 @@ const interpreters = (input: () => number, output: (val: number) => void) => ({
 const doInstruction = (
   code: number[],
   programCounter: number,
+  basePointer: number,
   input: () => number,
   output: (val: number) => void
 ) => {
@@ -197,7 +224,12 @@ const doInstruction = (
     output
   )[instruction.toString()]
   if (!interpreter) throw new Error(`Unrecognised instruction ${instruction}`)
-  return interpreter(code, programCounter, parametersBlock.toString())
+  return interpreter(
+    code,
+    programCounter,
+    basePointer,
+    parametersBlock.toString()
+  )
 }
 
 export const interpretCode = (
@@ -212,12 +244,20 @@ export const interpretCode = (
     code = raw
   }
   let programCounter = 0
+  let basePointer = 0
   let halt = false
 
   while (!halt) {
-    const instrResult = doInstruction(code, programCounter, input, output)
+    const instrResult = doInstruction(
+      code,
+      programCounter,
+      basePointer,
+      input,
+      output
+    )
     halt = instrResult.halt
     programCounter = instrResult.newProgramCounter
+    basePointer = instrResult.basePointer
   }
 
   return code.map(num => `${num}`).join(',')
