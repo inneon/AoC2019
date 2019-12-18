@@ -1,7 +1,7 @@
-import { bestAsteroid } from './day10/asteroidMapper'
+import { vaporise } from './day10/asteroidVaporisor'
 
 console.log(
-  bestAsteroid([
+  vaporise([
     '.#.####..#.#...#...##..#.#.##.',
     '..#####.##..#..##....#..#...#.',
     '......#.......##.##.#....##..#',
@@ -32,5 +32,5 @@ console.log(
     '.........##....#...#.....#..##',
     '###....#.........#..#..#.#.#..',
     '##...#...###.#..#.###....#.##.'
-  ])
+  ])[199]
 )
