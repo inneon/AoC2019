@@ -33,11 +33,11 @@ export class HullPainter {
     return () => {
       const row = this.hull[this.y]
       if (!row) {
-        return 0
+        return 1
       }
       const space = row[this.x]
       if (!space) {
-        return 0
+        return 1
       }
       return space
     }
@@ -73,12 +73,62 @@ export class HullPainter {
   }
 
   public colourOf(x: number, y: number) {
-    return this.hull[y][x]
+    const row = this.hull[y]
+    if (!row) {
+      return 1
+    }
+    const space = row[x]
+    if (!space) {
+      return 1
+    }
+    return space
   }
 
   public numberOfPaintedPanels() {
     return Object.values(this.hull)
       .map(row => Object.keys(row).length)
       .reduce((a, b) => a + b, 0)
+  }
+
+  public getBounds() {
+    const max = (arr: number[]) =>
+      arr.reduce(
+        (prev, curr) => (curr > prev ? curr : prev),
+        Number.MIN_SAFE_INTEGER
+      )
+    const min = (arr: number[]) =>
+      arr.reduce(
+        (prev, curr) => (curr < prev ? curr : prev),
+        Number.MAX_SAFE_INTEGER
+      )
+
+    const top = min(Object.keys(this.hull).map(Number))
+    const bottom = max(Object.keys(this.hull).map(Number))
+
+    const left = min(
+      Object.values(this.hull).map(row => min(Object.keys(row).map(Number)))
+    )
+    const right = max(
+      Object.values(this.hull).map(row => max(Object.keys(row).map(Number)))
+    )
+
+    return {
+      top,
+      bottom,
+      left,
+      right
+    }
+  }
+
+  public print() {
+    const { top, bottom, left, right } = this.getBounds()
+
+    for (let y = top; y <= bottom; y++) {
+      let line = ''
+      for (let x = left; x <= right; x++) {
+        line += this.hull[y][x] === 1 ? '**' : '  '
+      }
+      console.log(line)
+    }
   }
 }

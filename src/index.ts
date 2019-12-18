@@ -5,4 +5,4 @@ const painter = new HullPainter(
 )
 painter.run()
 
-console.log(painter.numberOfPaintedPanels())
+painter.print()

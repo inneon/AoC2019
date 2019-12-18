@@ -30,4 +30,18 @@ describe('hull painter', () => {
 
     expect(hullPainter.numberOfPaintedPanels()).toBe(4)
   })
+
+  it('can get the bounds', () => {
+    hullPainter = new HullPainter(
+      '3,0,104,1,104,1,3,0,104,1,104,1,3,0,104,1,104,1,3,0,104,1,104,1,3,0,104,1,104,1,99'
+    )
+    hullPainter.run()
+
+    expect(hullPainter.getBounds()).toEqual({
+      top: 0,
+      bottom: 1,
+      left: 0,
+      right: 1
+    })
+  })
 })
