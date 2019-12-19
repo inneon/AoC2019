@@ -28,19 +28,45 @@ const output = (num: number) => {
     y = num
   } else if (stage === 3) {
     stage = 1
-    addBlock(num)
+    if (x === -1) {
+      score = num
+    } else {
+      addBlock(num)
+      if (num === 4) {
+        if (ready) {
+          printScreen()
+        } else {
+          ready = true
+        }
+      }
+    }
   }
 }
 
 export const drawScreen = (program: string) => {
-  interpretCode(program, () => 0, output)
-  return screen
+  interpretCode(program, joystick, output)
+  return score
 }
 
-export const printScreen = (program: string) => {
+const joystick = () => {
+  if (ballX < paddleX) {
+    paddleX--
+    return -1
+  }
+  if (ballX > paddleX) {
+    paddleX++
+    return 1
+  }
+  return 0
+}
+
+let score: number
+let ballX: number
+let paddleX: number
+let blocks: number = 0
+let ready = false
+export const printScreen = () => {
   let string = ''
-  let count = 0
-  drawScreen(program)
   for (let y = 0; y <= 22; y++) {
     for (let x = 0; x <= 43; x++) {
       switch (screen[y][x]) {
@@ -52,13 +78,15 @@ export const printScreen = (program: string) => {
           break
         case 2:
           string += '+'
-          count++
+          blocks++
           break
         case 3:
           string += '_'
+          paddleX = x
           break
         case 4:
           string += '*'
+          ballX = x
           break
 
         default:
@@ -68,5 +96,5 @@ export const printScreen = (program: string) => {
     string += '\r\n'
   }
   console.log(string)
-  console.log(count)
+  console.log(blocks, score)
 }
