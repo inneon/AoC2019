@@ -1,7 +1,7 @@
-import { synthesise } from './day14/nanoFactory'
+import { synthesise, maximiesFuel } from './day14/nanoFactory'
 
 console.log(
-  synthesise([
+  maximiesFuel(1000000000000, [
     '4 ZDGD, 1 HTRQV => 3 VRKNQ',
     '15 XKZQZ, 1 MWZQ => 4 LHWX',
     '1 WVPKL => 2 HJLX',

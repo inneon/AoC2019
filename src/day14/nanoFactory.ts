@@ -1,3 +1,5 @@
+import * as fs from 'fs'
+
 interface Dictionary<TVal> {
   [key: string]: TVal
 }
@@ -61,15 +63,17 @@ const removeLeftovers = (name: string, desiredQuantity: number) => {
   }
 }
 
-export const synthesise = (recipes: string[]) => {
+export const resetLeftovers = () => {
   leftovers = {}
+}
+
+export const synthesise = (recipes: string[], target: string = 'FUEL') => {
   const parsed = parse(recipes)
 
-  let fuel = parsed['FUEL']
+  let fuel = parsed[target]
   let result = 0
 
   while (fuel.inputs.length > 0) {
-    //console.log(fuel.inputs)
     const targetChemical = fuel.inputs.shift()
     if (targetChemical.name === 'ORE') {
       result += targetChemical.quantity
@@ -93,4 +97,27 @@ export const synthesise = (recipes: string[]) => {
   }
 
   return result
+}
+
+export const maximiesFuel = (ore: number, recipes: string[]) => {
+  let fuel = 0
+  const unitCost = synthesise(recipes)
+
+  let approximation = Math.floor(ore / unitCost)
+  let iterating = true
+  while (iterating) {
+    const oreUsed = synthesise(
+      [...recipes, `${approximation} FUEL => 1 MAX`],
+      'MAX'
+    )
+    const nextApproximation =
+      approximation + Math.floor((ore - oreUsed) / unitCost)
+    if (nextApproximation === approximation) {
+      iterating = false
+      fuel = approximation
+    } else {
+      approximation = nextApproximation
+    }
+  }
+  return fuel
 }
