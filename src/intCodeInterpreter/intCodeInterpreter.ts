@@ -1,4 +1,5 @@
 import { decodeParameter } from './parameterDecoder'
+import { HookLibrary, nullHooksLibrary, Hook } from './hooks'
 
 const verbose = false
 const log = (message: string) => {
@@ -28,12 +29,15 @@ const addInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
-  const [op1Value, op2Value, op3Value] = decodeParameter(
-    parameters,
-    [op1, op2, op3],
-    ['read', 'read', 'write'],
-    code,
-    basePointer
+  const hook: Hook = hooks['1']
+  const [op1Value, op2Value, op3Value] = hook(
+    decodeParameter(
+      parameters,
+      [op1, op2, op3],
+      ['read', 'read', 'write'],
+      code,
+      basePointer
+    )
   )
 
   log(
@@ -56,6 +60,7 @@ const multInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
+  const hook: Hook = hooks['2']
   const [op1Value, op2Value, op3Value] = decodeParameter(
     parameters,
     [op1, op2, op3],
@@ -81,6 +86,7 @@ const inputInterpreter = (input: () => number): InstructionInterpreter => (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
+  const hook: Hook = hooks['3']
   const [op1Value] = decodeParameter(
     parameters,
     [op1],
@@ -106,6 +112,7 @@ const outputInterpreter = (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
+  const hook: Hook = hooks['4']
   const [op1Value] = decodeParameter(
     parameters,
     [op1],
@@ -145,6 +152,7 @@ const jtInterpreter: InstructionInterpreter = (
 ) => {
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
+  const hook: Hook = hooks['5']
   const [op1Value, op2Value] = decodeParameter(
     parameters,
     [op1, op2],
@@ -168,6 +176,7 @@ const jfInterpreter: InstructionInterpreter = (
 ) => {
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
+  const hook: Hook = hooks['6']
   const [op1Value, op2Value] = decodeParameter(
     parameters,
     [op1, op2],
@@ -192,6 +201,7 @@ const ltInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
+  const hook: Hook = hooks['7']
   const [op1Value, op2Value, op3Value] = decodeParameter(
     parameters,
     [op1, op2, op3],
@@ -219,6 +229,7 @@ const eqInterpreter: InstructionInterpreter = (
   const op1 = code[programCounter + 1]
   const op2 = code[programCounter + 2]
   const op3 = code[programCounter + 3]
+  const hook: Hook = hooks['8']
   const [op1Value, op2Value, op3Value] = decodeParameter(
     parameters,
     [op1, op2, op3],
@@ -242,6 +253,7 @@ const basePointerInterpreter: InstructionInterpreter = (
   parameters
 ) => {
   const op1 = code[programCounter + 1]
+  const hook: Hook = hooks['9']
   const [op1Value] = decodeParameter(
     parameters,
     [op1],
@@ -294,10 +306,13 @@ const doInstruction = (
   )
 }
 
+let hooks: HookLibrary = {}
+
 export const interpretCode = (
   raw: string | number[],
   input: () => number = () => 0,
-  output: (val: number) => void = () => {}
+  output: (val: number) => void = () => {},
+  overrideHooks: HookLibrary = {}
 ) => {
   let code: number[]
   if (typeof raw === 'string') {
@@ -308,6 +323,10 @@ export const interpretCode = (
   let programCounter = 0
   let basePointer = 0
   let halt = false
+  hooks = {
+    ...nullHooksLibrary,
+    ...overrideHooks
+  }
 
   while (!halt) {
     const instrResult = doInstruction(
