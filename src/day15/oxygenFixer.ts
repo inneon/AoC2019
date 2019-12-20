@@ -20,6 +20,8 @@ class OxygenFixer {
   private ship: Dictionary<Dictionary<string>> = { 0: { 0: '...' } }
   private x = 0
   private y = 0
+  private grateX = 0
+  private grateY = 0
   private t = 0
   private b = 0
   private l = 0
@@ -34,22 +36,41 @@ class OxygenFixer {
     }
   }
 
-  public load = (serialised: string) => {
-    const { ship, t, b, l, r } = JSON.parse(serialised)
+  public load = (file: string) => {
+    const { ship, t, b, l, r, gy, gx } = JSON.parse(
+      fs.readFileSync(file, 'utf8')
+    )
     this.ship = ship
     this.l = l
     this.r = r
     this.t = t
     this.b = b
-    this.distanceToGrate()
+    this.grateX = gx
+    this.grateY = gy
+    this.distanceToGrate(0, 0)
   }
 
-  private distanceToGrate = () => {
+  public save = (file: string) => {
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        ship: this.ship,
+        l: this.l,
+        r: this.r,
+        t: this.t,
+        b: this.b,
+        gx: this.grateX,
+        gy: this.grateY
+      })
+    )
+  }
+
+  private distanceToGrate = (x: number, y: number) => {
     let queue: (
       | { type: 'coord'; x: number; y: number }
       | { type: 'increment'; dist: number }
     )[] = [
-      { type: 'coord', x: 0, y: 0 },
+      { type: 'coord', x, y },
       { type: 'increment', dist: 1 }
     ]
 
@@ -77,9 +98,7 @@ class OxygenFixer {
                 this.ship[y][x] === '...' || this.ship[y][x] === 'DDD'
             )
         )
-        if (this.ship[currY][currX] === 'DDD') {
-          queue = []
-        }
+
         this.ship[currY][currX] = pad(dist)
       } else if (curr.type === 'increment') {
         dist = curr.dist
@@ -87,6 +106,7 @@ class OxygenFixer {
       }
     }
     this.print()
+    console.log(dist)
   }
 
   public print = () => {
@@ -163,20 +183,10 @@ class OxygenFixer {
           break
         case 2:
           this.addToMap('!!!', x, y)
-          fs.writeFileSync(
-            'ship.json',
-            JSON.stringify({
-              ship: this.ship,
-              t: this.t,
-              b: this.b,
-              l: this.l,
-              r: this.r
-            })
-          )
+          this.grateX = x
+          this.grateY = y
           this.x = x
           this.y = y
-          this.distanceToGrate()
-          this.controller = () => -1
           break
       }
     }
@@ -184,6 +194,11 @@ class OxygenFixer {
 
   public run = (program: string) => {
     interpretCode(program, this.controller, this.movementResult())
+  }
+
+  public fillWithOxygen = () => {
+    this.distanceToGrate(this.grateX, this.grateY)
+    this.controller = () => -1
   }
 }
 
