@@ -43,7 +43,9 @@ export const phase = (input: string) => {
   return '0'.repeat(input.length - result.length) + result
 }
 
-export const multiPhase = (input: string, phases: number): string =>
+export type MultiPhase = (input: string, phases: number) => string
+
+export const multiPhase: MultiPhase = (input: string, phases: number) =>
   Array.apply(null, Array(phases)).reduce(phase, input)
 
 export const finalMessage = (offset: number, fftOutput: string) =>
