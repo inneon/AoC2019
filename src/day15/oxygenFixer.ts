@@ -126,7 +126,7 @@ class OxygenFixer {
       }
       map += '\r\n'
     }
-    return map
+    return map.trim()
   }
 
   private addToMap = (symbol: string, x: number, y: number) => {
