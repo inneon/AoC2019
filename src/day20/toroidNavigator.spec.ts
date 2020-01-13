@@ -58,6 +58,59 @@ YN......#               VT..#....QG
            B   J   C               
            U   P   P               `
 
+const mapA = `        A         
+        A         
+  ######.#########  
+  ######.#########  
+CC..####.#########  
+  #.### B    #####  
+ZZ..### B    #####  
+  #.###      #####  
+BB.....CC    #####  
+  ################  
+  ################  
+  ################  
+                    
+                    `
+
+const map3 = `             Z L X W       C                 
+             Z P Q B       K                 
+  ###########.#.#.#.#######.###############  
+  #...#.......#.#.......#.#.......#.#.#...#  
+  ###.#.#.#.#.#.#.#.###.#.#.#######.#.#.###  
+  #.#...#.#.#...#.#.#...#...#...#.#.......#  
+  #.###.#######.###.###.#.###.###.#.#######  
+  #...#.......#.#...#...#.............#...#  
+  #.#########.#######.#.#######.#######.###  
+  #...#.#    F       R I       Z    #.#.#.#  
+  #.###.#    D       E C       H    #.#.#.#  
+  #.#...#                           #...#.#  
+  #.###.#                           #.###.#  
+  #.#....OA                       WB..#.#..ZH
+  #.###.#                           #.#.#.#  
+CJ......#                           #.....#  
+  #######                           #######  
+  #.#....CK                         #......IC
+  #.###.#                           #.###.#  
+  #.....#                           #...#.#  
+  ###.###                           #.#.#.#  
+XF....#.#                         RF..#.#.#  
+  #####.#                           #######  
+  #......CJ                       NM..#...#  
+  ###.#.#                           #.###.#  
+RE....#.#                           #......RF
+  ###.###        X   X       L      #.#.#.#  
+  #.....#        F   Q       P      #.#.#.#  
+  ###.###########.###.#######.#########.###  
+  #.....#...#.....#.......#...#.....#.#...#  
+  #####.#.###.#######.#######.###.###.#.#.#  
+  #.......#.......#.#.#.#.#...#...#...#.#.#  
+  #####.###.#####.#.#.#.#.###.###.#.###.###  
+  #.......#.....#.#...#...............#...#  
+  #############.#.#.###.###################  
+               A O F   N                     
+               A A D   M                     `
+
 describe('Toroid navigator', () => {
   it('can get the start point', () => {
     const map = map1
@@ -77,6 +130,7 @@ describe('Toroid navigator', () => {
         name: 'AA',
         x: 9,
         y: 2,
+        z: -1,
         from: {
           x: 9,
           y: 1
@@ -86,6 +140,7 @@ describe('Toroid navigator', () => {
         name: 'BC',
         x: 9,
         y: 6,
+        z: 1,
         from: {
           x: 9,
           y: 7
@@ -95,6 +150,7 @@ describe('Toroid navigator', () => {
         name: 'BC',
         x: 2,
         y: 8,
+        z: -1,
         from: {
           x: 1,
           y: 8
@@ -104,6 +160,7 @@ describe('Toroid navigator', () => {
         name: 'DE',
         x: 6,
         y: 10,
+        z: 1,
         from: {
           x: 7,
           y: 10
@@ -113,6 +170,7 @@ describe('Toroid navigator', () => {
         name: 'FG',
         x: 11,
         y: 12,
+        z: 1,
         from: {
           x: 11,
           y: 11
@@ -122,6 +180,8 @@ describe('Toroid navigator', () => {
         name: 'DE',
         x: 2,
         y: 13,
+
+        z: -1,
         from: {
           x: 1,
           y: 13
@@ -131,6 +191,7 @@ describe('Toroid navigator', () => {
         name: 'FG',
         x: 2,
         y: 15,
+        z: -1,
         from: {
           x: 1,
           y: 15
@@ -140,6 +201,7 @@ describe('Toroid navigator', () => {
         name: 'ZZ',
         x: 13,
         y: 16,
+        z: -1,
         from: {
           x: 13,
           y: 17
@@ -149,10 +211,18 @@ describe('Toroid navigator', () => {
   })
 
   it('gets the same result for example 1', () => {
-    expect(getToEnd(map1)).toBe(23)
+    expect(getToEnd(map1, false)).toBe(23)
   })
 
   it('gets the same result for example 2', () => {
-    expect(getToEnd(map2)).toBe(58)
+    expect(getToEnd(map2, false)).toBe(58)
+  })
+
+  it('can get back at the right level', () => {
+    expect(getToEnd(mapA, true)).toBe(16)
+  })
+
+  it('gets the same result for example 3', () => {
+    expect(getToEnd(map3, true)).toBe(396)
   })
 })

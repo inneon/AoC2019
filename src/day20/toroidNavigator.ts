@@ -1,6 +1,3 @@
-import arrayFlatten from 'array-flatten'
-import { printScreen } from '../day13/arcadeRunner'
-
 interface Space {
   token: string
   x: number
@@ -11,6 +8,7 @@ interface Portal {
   name: string
   x: number
   y: number
+  z: number
   from: {
     x: number
     y: number
@@ -33,6 +31,7 @@ const getPortals = (map: Space[][]) => {
         name: map[0][x].token + map[1][x].token,
         x,
         y: 2,
+        z: -1,
         from: {
           x,
           y: 1
@@ -45,6 +44,7 @@ const getPortals = (map: Space[][]) => {
         name: map[boundBottom + 1][x].token + map[boundBottom + 2][x].token,
         x,
         y: boundBottom,
+        z: -1,
         from: {
           x,
           y: boundBottom + 1
@@ -64,6 +64,7 @@ const getPortals = (map: Space[][]) => {
         name: map[y][0].token + map[y][1].token,
         x: 2,
         y,
+        z: -1,
         from: {
           x: 1,
           y
@@ -76,6 +77,7 @@ const getPortals = (map: Space[][]) => {
         name: map[y][boundRight + 1].token + map[y][boundRight + 2].token,
         x: boundRight,
         y: y,
+        z: -1,
         from: {
           x: boundRight + 1,
           y
@@ -99,6 +101,7 @@ const getPortals = (map: Space[][]) => {
         name: map[boundInnerTop + 1][x].token + map[boundInnerTop + 2][x].token,
         x,
         y: boundInnerTop,
+        z: 1,
         from: {
           x,
           y: boundInnerTop + 1
@@ -113,6 +116,7 @@ const getPortals = (map: Space[][]) => {
           map[boundInnerBottom - 1][x].token,
         x,
         y: boundInnerBottom,
+        z: 1,
         from: {
           x,
           y: boundInnerBottom - 1
@@ -128,6 +132,7 @@ const getPortals = (map: Space[][]) => {
           map[y][boundInnerLeft + 1].token + map[y][boundInnerLeft + 2].token,
         x: boundInnerLeft,
         y,
+        z: 1,
         from: {
           x: boundInnerLeft + 1,
           y
@@ -141,6 +146,7 @@ const getPortals = (map: Space[][]) => {
           map[y][boundInnerRight - 2].token + map[y][boundInnerRight - 1].token,
         x: boundInnerRight,
         y,
+        z: 1,
         from: {
           x: boundInnerRight - 1,
           y
@@ -180,25 +186,34 @@ const print = (map: Space[][]) => {
   console.log(line)
 }
 
-export const getToEnd = (map: string) => {
+const clone = (map: Space[][]) =>
+  map.map(line => line.map(space => ({ ...space })))
+
+export const getToEnd = (map: string, recursive: boolean) => {
   const { start, end, portals, tokens } = parseMap(map)
+  const fresh = clone(tokens)
+  const levels = [clone(fresh)]
 
   let queue: (
-    | { type: 'coord'; x: number; y: number }
-    | { type: 'increment'; dist: number }
+    | { type: 'coord'; x: number; y: number; z: number }
+    | { type: 'increment'; myToken: string; otherToken: string }
   )[] = [
-    { type: 'coord', ...start },
-    { type: 'increment', dist: 1 }
+    { type: 'coord', ...start, z: 0 },
+    { type: 'increment', myToken: 'o', otherToken: 'x' },
+    { type: 'coord', ...end, z: 0 },
+    { type: 'increment', myToken: 'x', otherToken: 'o' }
   ]
 
   let dist = 0
+  let myToken = 'x'
+  let otherToken = 'o'
 
-  while (queue.length > 1) {
+  while (queue.length > 2) {
     const curr = queue.shift()
     if (curr.type === 'coord') {
-      const { x, y } = curr
-      if (end.x === x && end.y === y) {
-        return dist
+      const { x, y, z } = curr
+      if (levels[z][y][x].token === otherToken) {
+        return dist - 1
       }
       queue.push(
         ...[
@@ -211,7 +226,8 @@ export const getToEnd = (map: string) => {
             return {
               type: 'coord' as 'coord',
               x: dx + x,
-              y: dy + y
+              y: dy + y,
+              z
             }
           })
           .map(({ x, y }) => {
@@ -224,26 +240,38 @@ export const getToEnd = (map: string) => {
                   p.name === portal.name && p.x !== portal.x && p.y != portal.y
               )[0]
               if (otherEnd) {
+                const nextZ = recursive ? z - otherEnd.z : z
+                if (nextZ === -1) {
+                  return { x: 0, y: 0, z: 0, type: 'coord' as 'coord' }
+                }
+                if (nextZ === levels.length) {
+                  levels.push(clone(fresh))
+                }
+
                 return {
                   type: 'coord' as 'coord',
                   x: otherEnd.x,
-                  y: otherEnd.y
+                  y: otherEnd.y,
+                  z: nextZ
                 }
               }
             }
             return {
               type: 'coord' as 'coord',
               x,
-              y
+              y,
+              z
             }
           })
-          .filter(({ x, y }) => tokens[y][x].token === '.')
+          .filter(({ x, y, z }) => levels[z][y][x].token === '.')
       )
 
-      tokens[y][x].token = '#'
+      levels[z][y][x].token = myToken
     } else if (curr.type === 'increment') {
-      dist = curr.dist
-      queue.push({ type: 'increment', dist: dist + 1 })
+      dist++
+      myToken = curr.myToken
+      otherToken = curr.otherToken
+      queue.push(curr)
     }
   }
   return -1
